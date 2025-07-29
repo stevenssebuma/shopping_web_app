@@ -39,13 +39,17 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _showCartDialog() {}
+  void _showCartDialog() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CartPage(cartItems: _cart)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Responsive grid count
     int crossAxisCount;
     if (screenWidth < 600) {
       crossAxisCount = 1;
@@ -58,49 +62,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.shopping_bag, size: 28),
-            const SizedBox(width: 8),
-            const Text(
-              'Shopping Web App',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.indigo,
-        actions: [
-          IconButton(
-            tooltip: 'Favorites',
-            onPressed: () {},
-            icon: const Icon(Icons.favorite_border),
-          ),
-          Stack(
-            children: [
-              IconButton(
-                tooltip: 'Cart',
-                icon: const Icon(Icons.shopping_cart),
-                onPressed: _showCartDialog,
-              ),
-              if (_cart.isNotEmpty)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: CircleAvatar(
-                    radius: 8,
-                    backgroundColor: Colors.red,
-                    child: Text(
-                      _cart.length.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-
+      appBar: _buildAppBar(),
       body: Column(
         children: [
           Expanded(
@@ -123,23 +85,66 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          Container(
-            color: Colors.indigo.shade50,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  ' 2025 Shopping Web App',
-                  style: TextStyle(color: Colors.grey),
-                ),
-                Text(
-                  'Terms | Privacy',
-                  style: TextStyle(color: Colors.blueAccent),
-                ),
-              ],
-            ),
+          _buildFooter(),
+        ],
+      ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: Row(
+        children: [
+          const Icon(Icons.shopping_bag, size: 28),
+          const SizedBox(width: 8),
+          const Text(
+            'Shopping Web App',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
+        ],
+      ),
+      backgroundColor: Colors.indigo,
+      actions: [
+        IconButton(
+          tooltip: 'Favorites',
+          onPressed: () {},
+          icon: const Icon(Icons.favorite_border),
+        ),
+        Stack(
+          children: [
+            IconButton(
+              tooltip: 'Cart',
+              icon: const Icon(Icons.shopping_cart),
+              onPressed: _showCartDialog,
+            ),
+            if (_cart.isNotEmpty)
+              Positioned(
+                right: 6,
+                top: 6,
+                child: CircleAvatar(
+                  radius: 8,
+                  backgroundColor: Colors.red,
+                  child: Text(
+                    _cart.length.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      color: Colors.indigo.shade50,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: const [
+          Text(' 2025 Shopping Web App', style: TextStyle(color: Colors.grey)),
+          Text('Terms | Privacy', style: TextStyle(color: Colors.blueAccent)),
         ],
       ),
     );
@@ -167,7 +172,7 @@ class ProductCard extends StatelessWidget {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: AspectRatio(
-              aspectRatio: 1, // Makes it a square
+              aspectRatio: 1,
               child: Image.asset(product.imagePath, fit: BoxFit.cover),
             ),
           ),
@@ -214,6 +219,162 @@ class ProductCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CartPage extends StatefulWidget {
+  final List<Product> cartItems;
+
+  const CartPage({super.key, required this.cartItems});
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  void _removeFromCart(Product product) {
+    setState(() {
+      widget.cartItems.remove(product);
+    });
+  }
+
+  double getTotal() {
+    return widget.cartItems.fold(0, (sum, item) => sum + item.price);
+  }
+
+  void _makeOrder() {
+    if (widget.cartItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cart is empty. Add items before ordering.'),
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Order'),
+        content: Text(
+          'Proceed to order ${widget.cartItems.length} item(s) for \$${getTotal().toStringAsFixed(2)}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                widget.cartItems.clear(); // Clear the cart
+              });
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Order placed successfully!')),
+              );
+            },
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const Icon(Icons.shopping_bag, size: 28),
+            const SizedBox(width: 8),
+            const Text(
+              'Shopping Web App',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.indigo,
+        actions: [
+          IconButton(
+            tooltip: 'Back to Home',
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.home),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: widget.cartItems.isEmpty
+                ? const Center(child: Text("Your cart is empty."))
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: widget.cartItems.length,
+                    itemBuilder: (context, index) {
+                      final item = widget.cartItems[index];
+                      return ListTile(
+                        leading: Image.asset(item.imagePath, width: 50),
+                        title: Text(item.name),
+                        subtitle: Text("\$${item.price.toStringAsFixed(2)}"),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          tooltip: 'Remove item',
+                          onPressed: () => _removeFromCart(item),
+                        ),
+                      );
+                    },
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 20),
+                  ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            alignment: Alignment.centerRight,
+            child: Text(
+              "Total: \$${getTotal().toStringAsFixed(2)}",
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _makeOrder,
+                icon: const Icon(Icons.shopping_cart_checkout),
+                label: const Text('Make Order'),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            color: Colors.indigo.shade50,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Text(
+                  ' 2025 Shopping Web App',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                Text(
+                  'Terms | Privacy',
+                  style: TextStyle(color: Colors.blueAccent),
+                ),
+              ],
             ),
           ),
         ],
