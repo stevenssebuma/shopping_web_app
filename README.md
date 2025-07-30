@@ -1,7 +1,7 @@
 # Overview
 Hello GitHub!
 
-# shopping_web_app
+# Shopping Web App
 
 A new Flutter project.
 
