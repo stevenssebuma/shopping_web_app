@@ -22,25 +22,25 @@ final List<Product> dummyProducts = [
   Product(
     name: 'Headphones',
     price: 45.25,
-    imagePath: 'lib/assets/images/headphones.jpg',
+    imagePath: 'lib/assets/images/headphones.jpeg',
     description: 'Noise-cancelling headphones',
   ),
   Product(
-    name: 'Headphones',
+    name: 'NY Caps',
     price: 45.25,
-    imagePath: 'lib/assets/images/headphones.jpg',
+    imagePath: 'lib/assets/images/Caps.jpg',
+    description: 'Stylish NY Caps',
+  ),
+  Product(
+    name: 'Cool Jacket',
+    price: 45.25,
+    imagePath: 'lib/assets/images/jacket.webp',
     description: 'Noise-cancelling headphones',
   ),
   Product(
-    name: 'Headphones',
+    name: 'Stylish Sunglasses',
     price: 45.25,
-    imagePath: 'lib/assets/images/headphones.jpg',
-    description: 'Noise-cancelling headphones',
-  ),
-  Product(
-    name: 'Headphones',
-    price: 45.25,
-    imagePath: 'lib/assets/images/headphones.jpg',
-    description: 'Noise-cancelling headphones',
+    imagePath: 'lib/assets/images/sunglasses.jpg',
+    description: 'Trendy sunglasses for summer',
   ),
 ];
