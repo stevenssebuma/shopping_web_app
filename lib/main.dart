@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import './assets/models/product_model.dart';
 import './assets/data/dummy_products.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+// ...
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -133,7 +139,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ],
-    ); 
+    );
   }
 
   Widget _buildFooter() {

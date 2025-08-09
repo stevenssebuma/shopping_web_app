@@ -6,10 +6,10 @@ class ProductCard extends StatelessWidget {
   final VoidCallback onAddToCart;
 
   const ProductCard({
-    super.key,
+    Key? key,
     required this.product,
     required this.onAddToCart,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -51,19 +51,6 @@ class ProductCard extends StatelessWidget {
             ),
           ],
         ),
-
-
-
-
-
-
-
-
-
-
-
-
-        
       ),
     );
   }
