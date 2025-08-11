@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import './assets/models/product_model.dart';
-import './assets/data/dummy_products.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
 
-// ...
-
+// -----------------------------------------------------------------------------
+// MAIN FUNCTION & APP SETUP (This is where the app runs)
+// -----------------------------------------------------------------------------
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -29,6 +30,9 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// -----------------------------------------------------------------------------
+// HOMEPAGE - FETCHING PRODUCTS FROM REALTIME DATABASE
+// -----------------------------------------------------------------------------
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -37,11 +41,64 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<Product> _cart = [];
+  final List<Product> _cart = []; // Local cart for session, for simplicity
+
+  // Realtime Database reference for products
+  final DatabaseReference _productsRef = FirebaseDatabase.instance.ref(
+    'products',
+  );
+
+  List<Product> _realtimeProducts = []; // List to hold products from RTDB
+  bool _isLoading = true; // State to show loading indicator
+  String? _errorMessage; // State to show error message
+
+  @override
+  void initState() {
+    super.initState();
+    _listenForProducts(); // Start listening for product changes
+  }
+
+  // Method to set up a real-time listener for products
+  void _listenForProducts() {
+    _productsRef.onValue.listen(
+      (event) {
+        final data = event.snapshot.value; // Get the raw data from the snapshot
+        final List<Product> loadedProducts = [];
+
+        if (event.snapshot.exists && data != null && data is Map) {
+          data.forEach((key, value) {
+            if (value is Map) {
+              // Create Product object from the map data
+              loadedProducts.add(Product.fromMap(key, value));
+            }
+          });
+        }
+        setState(() {
+          _realtimeProducts = loadedProducts;
+          _isLoading = false;
+          _errorMessage = null; // Clear any previous errors
+        });
+        print(
+          'Products updated from Realtime Database: ${_realtimeProducts.length} items',
+        );
+      },
+      onError: (error) {
+        setState(() {
+          _errorMessage = 'Failed to load products: ${error.toString()}';
+          _isLoading = false;
+        });
+        print('Realtime Database Error: $error');
+      },
+    );
+  }
 
   void _addToCart(Product product) {
     setState(() {
       _cart.add(product);
+      // Optional: Show a snackbar confirming item added
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${product.name} added to cart!')));
     });
   }
 
@@ -72,24 +129,39 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 3 / 4,
-                ),
-                itemCount: dummyProducts.length,
-                itemBuilder: (context, index) {
-                  return ProductCard(
-                    product: dummyProducts[index],
-                    onAddToCart: () => _addToCart(dummyProducts[index]),
-                  );
-                },
-              ),
-            ),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  ) // Show loading indicator
+                : _errorMessage != null
+                ? Center(child: Text(_errorMessage!)) // Show error message
+                : _realtimeProducts.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No products available. Add some to your Realtime Database!',
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 3 / 4,
+                      ),
+                      itemCount:
+                          _realtimeProducts.length, // Use products from RTDB
+                      itemBuilder: (context, index) {
+                        return ProductCard(
+                          product:
+                              _realtimeProducts[index], // Pass products from RTDB
+                          onAddToCart: () =>
+                              _addToCart(_realtimeProducts[index]),
+                        );
+                      },
+                    ),
+                  ),
           ),
           _buildFooter(),
         ],
@@ -113,7 +185,14 @@ class _HomePageState extends State<HomePage> {
       actions: [
         IconButton(
           tooltip: 'Favorites',
-          onPressed: () {},
+          onPressed: () {
+            // Implement favorites functionality here
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Favorites functionality not implemented yet.'),
+              ),
+            );
+          },
           icon: const Icon(Icons.favorite_border),
         ),
         Stack(
@@ -157,6 +236,9 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// -----------------------------------------------------------------------------
+// PRODUCT CARD (uses the Product model to generate cards for each product)
+// -----------------------------------------------------------------------------
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onAddToCart;
@@ -179,7 +261,14 @@ class ProductCard extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: AspectRatio(
               aspectRatio: 1,
-              child: Image.asset(product.imagePath, fit: BoxFit.cover),
+              child: Image.asset(
+                product.imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.broken_image,
+                  size: 50,
+                ), // Fallback for missing images
+              ),
             ),
           ),
           Expanded(
@@ -233,6 +322,9 @@ class ProductCard extends StatelessWidget {
   }
 }
 
+// -----------------------------------------------------------------------------
+// CARTPAGE - PLACING ORDERS TO REALTIME DATABASE
+// -----------------------------------------------------------------------------
 class CartPage extends StatefulWidget {
   final List<Product> cartItems;
 
@@ -243,6 +335,9 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  // Realtime Database reference for orders
+  final DatabaseReference _ordersRef = FirebaseDatabase.instance.ref('orders');
+
   void _removeFromCart(Product product) {
     setState(() {
       widget.cartItems.remove(product);
@@ -253,7 +348,7 @@ class _CartPageState extends State<CartPage> {
     return widget.cartItems.fold(0, (sum, item) => sum + item.price);
   }
 
-  void _makeOrder() {
+  Future<void> _makeOrder() async {
     if (widget.cartItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -276,14 +371,55 @@ class _CartPageState extends State<CartPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              setState(() {
-                widget.cartItems.clear(); // Clear the cart
-              });
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Order placed successfully!')),
-              );
+            onPressed: () async {
+              Navigator.pop(ctx); // Close confirmation dialog
+
+              // -------------------------------------------------------
+              // Firebase Realtime Database: Push Order
+              // -------------------------------------------------------
+              try {
+                // Create a new unique key for the order
+                final newOrderRef = _ordersRef.push();
+
+                // Prepare order details
+                final orderDetails = {
+                  'userId':
+                      'guest_user_123', // Replace with actual user ID if using Firebase Auth
+                  'timestamp':
+                      ServerValue.timestamp, // Use Firebase server timestamp
+                  'totalPrice': getTotal(),
+                  'items': widget.cartItems
+                      .map(
+                        (product) => {
+                          'productId': product.id,
+                          'name': product.name,
+                          'price': product.price,
+                        },
+                      )
+                      .toList(), // Convert list of Products to list of Maps
+                };
+
+                // Push the order to the database
+                await newOrderRef.set(orderDetails);
+
+                setState(() {
+                  widget.cartItems.clear(); // Clear the local cart
+                });
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Order placed successfully!')),
+                );
+                print(
+                  'Order placed to Realtime Database with ID: ${newOrderRef.key}',
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to place order: ${e.toString()}'),
+                  ),
+                );
+                print('Error placing order to Realtime Database: $e');
+              }
             },
             child: const Text('Confirm'),
           ),
@@ -321,14 +457,23 @@ class _CartPageState extends State<CartPage> {
         children: [
           Expanded(
             child: widget.cartItems.isEmpty
-                ? const Center(child: Text("Your cart is empty."))
+                ? const Center(
+                    child: Text(
+                      "Your cart is empty, you can go back for more products.",
+                    ),
+                  )
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: widget.cartItems.length,
                     itemBuilder: (context, index) {
                       final item = widget.cartItems[index];
                       return ListTile(
-                        leading: Image.asset(item.imagePath, width: 50),
+                        leading: Image.asset(
+                          item.imagePath,
+                          width: 50,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.broken_image, size: 50),
+                        ),
                         title: Text(item.name),
                         subtitle: Text("\$${item.price.toStringAsFixed(2)}"),
                         trailing: IconButton(

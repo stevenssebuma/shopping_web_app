@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "310188107229",
+    "firebase_url": "https://shopping-database-620c5-default-rtdb.firebaseio.com",
     "project_id": "shopping-database-620c5",
     "storage_bucket": "shopping-database-620c5.firebasestorage.app"
   },

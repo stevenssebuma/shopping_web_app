@@ -46,6 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '310188107229',
     projectId: 'shopping-database-620c5',
     authDomain: 'shopping-database-620c5.firebaseapp.com',
+    databaseURL: 'https://shopping-database-620c5-default-rtdb.firebaseio.com',
     storageBucket: 'shopping-database-620c5.firebasestorage.app',
     measurementId: 'G-MKSRWDB4EC',
   );
@@ -55,6 +56,7 @@ class DefaultFirebaseOptions {
     appId: '1:310188107229:android:0137adf7245f40c21cc234',
     messagingSenderId: '310188107229',
     projectId: 'shopping-database-620c5',
+    databaseURL: 'https://shopping-database-620c5-default-rtdb.firebaseio.com',
     storageBucket: 'shopping-database-620c5.firebasestorage.app',
   );
 
@@ -63,6 +65,7 @@ class DefaultFirebaseOptions {
     appId: '1:310188107229:ios:ad1494bc07dd66781cc234',
     messagingSenderId: '310188107229',
     projectId: 'shopping-database-620c5',
+    databaseURL: 'https://shopping-database-620c5-default-rtdb.firebaseio.com',
     storageBucket: 'shopping-database-620c5.firebasestorage.app',
     iosBundleId: 'com.example.shoppingWebApp',
   );
@@ -72,6 +75,7 @@ class DefaultFirebaseOptions {
     appId: '1:310188107229:ios:ad1494bc07dd66781cc234',
     messagingSenderId: '310188107229',
     projectId: 'shopping-database-620c5',
+    databaseURL: 'https://shopping-database-620c5-default-rtdb.firebaseio.com',
     storageBucket: 'shopping-database-620c5.firebasestorage.app',
     iosBundleId: 'com.example.shoppingWebApp',
   );
@@ -82,7 +86,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '310188107229',
     projectId: 'shopping-database-620c5',
     authDomain: 'shopping-database-620c5.firebaseapp.com',
+    databaseURL: 'https://shopping-database-620c5-default-rtdb.firebaseio.com',
     storageBucket: 'shopping-database-620c5.firebasestorage.app',
     measurementId: 'G-X6WN5MVFEB',
   );
+
 }
