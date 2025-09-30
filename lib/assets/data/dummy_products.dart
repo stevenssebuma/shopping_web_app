@@ -33,7 +33,7 @@ final List<Product> dummyProducts = [
     id: '5',
     name: 'NY Caps',
     price: 45.25,
-    imagePath: 'lib/assets/images/Caps.jpg',
+    imagePath: 'lib/assets/images/Caps.jpg',                                                                                                                                                                                            
     description: 'Stylish NY Caps',
   ),
   Product(
